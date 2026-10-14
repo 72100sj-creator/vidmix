@@ -1,3 +1,5 @@
+<p align="center"><img src="icon.png" width="128" alt="Icône VidMix"></p>
+
 # VidMix
 
 **Diaporama d'images et de vidéos pour Mac et Windows.**
@@ -45,7 +47,7 @@ Programme en un seul fichier (`main.py`), écrit en Python avec PyQt5 et VLC. In
 1. Installez [VLC](https://www.videolan.org) en **version 64 bits** (nécessaire pour les vidéos) et Python 3 si ce n'est pas déjà fait.
 2. Double-cliquez sur **`Installer_VidMix.bat`**.
    - Windows peut afficher « Windows a protégé votre ordinateur » : cliquez sur *Informations complémentaires*, puis *Exécuter quand même*.
-3. L'installeur crée le dossier `VidMix` dans votre dossier personnel, prépare les composants, ajoute une icône **VidMix** sur le Bureau et lance le programme.
+3. L'installeur crée le dossier `VidMix` dans votre dossier personnel, prépare les composants, ajoute une icône **VidMix** (celle du logo ci-dessus) sur le Bureau et lance le programme.
 
 Pour mettre à jour : relancez simplement le dernier `Installer_VidMix.bat` (l'ancien `main.py` est gardé en sauvegarde sous le nom `main_sauvegarde.py`).
 
@@ -71,6 +73,16 @@ cd ~/VidMix && source .venv/bin/activate && python main.py
 ```bash
 osacompile -o ~/Desktop/VidMix.app -e 'do shell script "~/VidMix/.venv/bin/python ~/VidMix/main.py > ~/VidMix/vidmix.log 2>&1 &"'
 ```
+
+**Donner son icône à `VidMix.app`** : placez `VidMix.icns` (fourni avec le projet) dans le dossier `~/VidMix`, puis (en adaptant le chemin si vous avez rangé l'application ailleurs que dans Applications) :
+
+```bash
+cp ~/VidMix/VidMix.icns /Applications/VidMix.app/Contents/Resources/applet.icns && touch /Applications/VidMix.app
+```
+
+Si le Finder garde l'ancienne icône, quittez-le avec `killall Finder`. Autre méthode, sans Terminal : dans le Finder, sélectionnez `VidMix.app`, faites `Cmd + I`, puis glissez `icon.png` ou `VidMix.icns` sur la petite icône en haut à gauche de la fenêtre d'informations.
+
+L'icône du Dock et des fenêtres, elle, est dessinée par le programme lui-même : rien à configurer.
 
 > Ne supprimez ni ne déplacez le dossier `~/VidMix` : l'icône y retrouve le programme.
 > Au premier lancement, macOS peut demander l'autorisation d'accéder à vos dossiers (Images, Bureau…) : choisissez **Autoriser**.
@@ -137,5 +149,6 @@ Les chemins sont enregistrés tels quels : une playlist n'est donc **pas portabl
 ## Pour les mainteneurs
 
 - Tout le programme tient dans **`main.py`** (PyQt5 + python-vlc).
-- **`Installer_VidMix.bat`** contient une copie de `main.py` encodée en base64 : **il doit être régénéré à chaque modification de `main.py`**, sinon l'installeur Windows installerait une ancienne version.
+- **`Installer_VidMix.bat`** contient une copie de `main.py` et de `VidMix.ico`, encodées en base64 : **il doit être régénéré à chaque modification de `main.py`**, sinon l'installeur Windows installerait une ancienne version.
+- L'icône est **dessinée par le code** (fonction `make_app_icon` de `main.py`). Les fichiers `icon.png`, `VidMix.icns` (Mac) et `VidMix.ico` (Windows) sont générés à partir de ce même dessin : si on le modifie, il faut les régénérer.
 - L'historique des versions est dans [`CHANGELOG.md`](CHANGELOG.md).

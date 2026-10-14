@@ -8,6 +8,7 @@ VidMix - diaporama d'images et de videos (version propre, fichier unique).
 - Les fichiers caches et les fichiers de moins de 10 Ko sont ignores.
 """
 import json
+import math
 import os
 import random
 import re
@@ -121,6 +122,92 @@ def collect_folder(folder):
             elif result == "ignore":
                 ignored += 1
     return found, ignored
+
+
+# ----------------------------------------------------------------------
+# Icône de l'application (dessinée par le programme, sans fichier image)
+# ----------------------------------------------------------------------
+def make_app_icon(size, margin=0.08):
+    """Icône VidMix : cercle zen (ensō) crème + triangle de lecture vermillon sur fond indigo."""
+    img = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32_Premultiplied)
+    img.fill(QtCore.Qt.transparent)
+    p = QtGui.QPainter(img)
+    p.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
+    S = float(size)
+    m = S * margin
+    B = S - 2 * m
+    body = QtCore.QRectF(m, m, B, B)
+    corner = B * 0.225
+
+    if margin >= 0.05:  # ombre douce sous l'icône
+        for i in range(9):
+            grow = B * 0.004 * i
+            rect = body.adjusted(-grow, -grow + B * 0.018, grow, grow + B * 0.018)
+            p.setPen(QtCore.Qt.NoPen)
+            p.setBrush(QtGui.QColor(0, 0, 0, 11))
+            p.drawRoundedRect(rect, corner + grow, corner + grow)
+
+    grad = QtGui.QLinearGradient(body.topLeft(), body.bottomRight())
+    grad.setColorAt(0.0, QtGui.QColor("#3B4C8A"))
+    grad.setColorAt(1.0, QtGui.QColor("#12162F"))
+    p.setPen(QtCore.Qt.NoPen)
+    p.setBrush(grad)
+    p.drawRoundedRect(body, corner, corner)
+
+    clip = QtGui.QPainterPath()
+    clip.addRoundedRect(body, corner, corner)
+    p.save()
+    p.setClipPath(clip)
+    shine = QtGui.QLinearGradient(body.topLeft(), QtCore.QPointF(body.left(), body.top() + B * 0.55))
+    shine.setColorAt(0.0, QtGui.QColor(255, 255, 255, 46))
+    shine.setColorAt(1.0, QtGui.QColor(255, 255, 255, 0))
+    p.setBrush(shine)
+    p.drawRect(body)
+    p.restore()
+
+    # cercle zen (ensō) : trait épais qui s'affine, avec une ouverture en haut
+    cx = cy = S / 2.0
+    radius = B * 0.335
+    w_max = B * 0.092
+    start = math.radians(128)
+    sweep = math.radians(326)
+    steps = 140
+    outer, inner = [], []
+    for i in range(steps + 1):
+        t = i / float(steps)
+        ang = start + sweep * t
+        width = w_max * (1.0 - 0.90 * t ** 1.25)
+        r = radius * (1.0 + 0.045 * t)   # légère spirale, comme un vrai coup de pinceau
+        outer.append(QtCore.QPointF(cx + (r + width / 2) * math.cos(ang), cy + (r + width / 2) * math.sin(ang)))
+        inner.append(QtCore.QPointF(cx + (r - width / 2) * math.cos(ang), cy + (r - width / 2) * math.sin(ang)))
+    ring = QtGui.QPolygonF(outer + inner[::-1])
+    p.setBrush(QtGui.QColor("#F4EEE3"))
+    p.drawPolygon(ring)
+    cap = w_max / 2.0
+    p.drawEllipse(QtCore.QPointF(cx + radius * math.cos(start), cy + radius * math.sin(start)), cap, cap)
+
+    # triangle de lecture vermillon, légèrement décalé pour paraître centré
+    tw, th = B * 0.215, B * 0.250
+    x0 = cx - tw / 3.0
+    tri = QtGui.QPolygonF([QtCore.QPointF(x0, cy - th / 2), QtCore.QPointF(x0, cy + th / 2),
+                           QtCore.QPointF(x0 + tw, cy)])
+    tri_grad = QtGui.QLinearGradient(x0, cy - th / 2, x0 + tw, cy + th / 2)
+    tri_grad.setColorAt(0.0, QtGui.QColor("#F2693B"))
+    tri_grad.setColorAt(1.0, QtGui.QColor("#D8402A"))
+    pen = QtGui.QPen(QtGui.QBrush(tri_grad), B * 0.03)
+    pen.setJoinStyle(QtCore.Qt.RoundJoin)
+    p.setPen(pen)
+    p.setBrush(tri_grad)
+    p.drawPolygon(tri)
+    p.end()
+    return QtGui.QPixmap.fromImage(img)
+
+
+def build_app_icon():
+    icon = QtGui.QIcon()
+    for size in (16, 24, 32, 48, 64, 128, 256, 512):
+        icon.addPixmap(make_app_icon(size, margin=0.02 if size <= 48 else 0.08))
+    return icon
 
 
 # ----------------------------------------------------------------------
@@ -1315,7 +1402,15 @@ class VidMixWindow(QtWidgets.QMainWindow):
 
 
 def main():
+    if sys.platform.startswith("win"):
+        try:  # pour que la barre des tâches affiche l'icône VidMix et non celle de Python
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VidMix.Diaporama")
+        except Exception:
+            pass
     app = QtWidgets.QApplication(sys.argv)
+    app.setApplicationName("VidMix")
+    app.setWindowIcon(build_app_icon())
     win = VidMixWindow()
     win.show()
     if len(sys.argv) > 1:

@@ -2,6 +2,14 @@
 
 Toutes les évolutions notables de VidMix sont notées ici, de la plus récente à la plus ancienne.
 
+## [4.1] - 2026-10-13
+
+### Ajouté
+- **Icône VidMix** : un cercle zen (ensō) crème et un triangle de lecture vermillon sur fond indigo.
+  - Affichée dans le Dock (Mac), la barre des tâches et la barre de titre (Windows), sur les deux fenêtres.
+  - Fichiers fournis : `icon.png`, `VidMix.icns` (application Mac) et `VidMix.ico` (Windows).
+  - L'installeur Windows donne cette icône au raccourci du Bureau.
+
 ## [4.0] - 2026-10-13
 
 ### Ajouté
